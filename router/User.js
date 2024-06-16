@@ -29,29 +29,28 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+
 router.get("/", async (req, res) => {
   try {
     const users = await User.find();
-    if (!users) return res.status(404).send({ message: "User not found" });
+    if(!users) return res.status(404).send({ message: "User not found"})
     res.status(200).send(users);
   } catch (error) {
-    res
-      .status(500)
-      .send({ message: "Internal Server Error", error: error.message });
+    res.status(500).send({ message: "Internal Server Error", error: error.message });
   }
 });
+
 
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user)
-      return res.status(404).send({ message: "not found user details" });
+    if(!user) return res.status(404).send({ message: "not found user details"})
     res.status(200).send(user);
   } catch (error) {
-    res
-      .status(500)
-      .send({ message: "Internal Server Error", error: error.message });
+    res.status(500).send({ message: "Internal Server Error", error: error.message });
   }
 });
+
+
 
 module.exports = router;
