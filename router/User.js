@@ -1,6 +1,8 @@
 const express = require("express");
 const User = require("../models/User");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -12,10 +14,55 @@ router.post("/register", async (req, res) => {
     }
 
     const user = new User({ name, email, password });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
     await user.save();
-    res.status(201).send(user);
+    const payload = {
+      user: {
+        id: user.id,
+      },
+    };
+
+    jwt.sign(payload, "secret", { expiresIn: 3600 }, (err, token) => {
+      if (err) throw err;
+      res.json({ token, message: "User Register Successfully" });
+    });
   } catch (error) {
     console.log(error);
+  }
+});
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const payload = {
+      user: {
+        id: user.id,
+      },
+    };
+
+    jwt.sign(payload, "secret", { expiresIn: 3600 }, (err, token) => {
+      if (err) throw err;
+      res.json({ token, message: "User logged in successfully" });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
   }
 });
 
